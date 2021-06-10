@@ -81,25 +81,35 @@ impl IProcessor for FilterTransform {
     }
 
     async fn execute(&self) -> Result<SendableDataBlockStream> {
+        println!("filter_predicate: {:?}", self.predicate);
+
         let exists_vec = find_exists_exprs(&[self.predicate.clone()]);
         let mut exists_res = HashMap::new();
 
         for exst in exists_vec {
             let name = format!("{:?}", exst);
             if let  Expression::Exists(p) = exst {
-                let mut exst_pipeline = PipelineBuilder::create(self.ctx.clone(), (*p).clone()).build()?;
-                let stream = exst_pipeline.execute().await?;
-                let result = stream.try_collect::<Vec<_>>().await?;
-                let b;
-                if result.len() > 0 {
-                    b = true;
-                } else {
-                    b = false;
+                let mut exst_pipeline = PipelineBuilder::create(self.ctx.clone(), (*p).clone()).build();
+                match exst_pipeline {
+                    Err(e) => panic!("do not expect this to happed"),
+                    _ => (),
                 }
+                let stream = exst_pipeline.unwrap().execute().await?;
+                let result = stream.try_collect::<Vec<_>>().await?;
+                println!("len: {:?}", result.len());
+                let b = if result.len() > 0 {
+                    true
+                } else {
+                    false
+                };
                 exists_res.insert(name, b);
             }
         }
+        println!("after for loop");
         let input_stream = self.input.execute().await?;
+        //let result = input_stream.try_collect::<Vec<_>>().await?;
+        //println!("len: {:?}", result.len());
+
         let executor = self.executor.clone();
         let column_name = self.predicate.column_name();
         let exists_map = exists_res.clone();
@@ -121,10 +131,12 @@ impl IProcessor for FilterTransform {
             batch.try_into()
         };
         let stream = input_stream.filter_map(move |v| {
+            println!("v={:?}", v);
             execute_fn(executor.clone(), &exists_map, &column_name, v)
                 .map(Some)
                 .transpose()
         });
+        println!("after for filter execute");
         Ok(Box::pin(stream))
     }
 }

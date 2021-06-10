@@ -59,11 +59,12 @@ impl ExpressionExecutor {
                 block.try_column_by_name(f.name())?.clone(),
             );
         }
-
+        //println!("exists_res:{:?}", exists_res);
         let rows = block.num_rows();
         if let Some(map) = exists_res {
             for (name, b) in map {
-                column_map.insert(name.to_string(), DataColumnarValue::Constant(DataValue::Boolean(Some(*b)), rows));
+                let b = DataColumnarValue::Constant(DataValue::Boolean(Some(*b)), rows).to_array()?;
+                column_map.insert(name.to_string(), DataColumnarValue::Array(b));
             }
         }
 
@@ -91,6 +92,8 @@ impl ExpressionExecutor {
                         .arg_names
                         .iter()
                         .map(|arg| {
+                            //println!("arg_name={}", arg);
+                            //println!("value={:?}", column_map.get(arg));
                             column_map.get(arg).cloned().ok_or_else(|| {
                                 ErrorCodes::LogicalError(
                                     "Arguments must be prepared before function transform",
@@ -100,6 +103,7 @@ impl ExpressionExecutor {
                         .collect::<Result<Vec<DataColumnarValue>>>()?;
 
                     let func = f.to_function()?;
+                    //println!("arg_columns:{:?}", arg_columns);
                     let column = func.eval(&arg_columns, rows)?;
                     column_map.insert(f.name.clone(), column);
                 }
