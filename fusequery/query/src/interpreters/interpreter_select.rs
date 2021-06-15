@@ -15,6 +15,7 @@ use common_planners::Expression;
 use common_planners::FilterPlan;
 use common_planners::PlanNode;
 use common_planners::SelectPlan;
+use common_planners::SubqueryResult;
 use common_streams::SendableDataBlockStream;
 use common_tracing::tracing;
 use futures::TryStreamExt;
@@ -54,9 +55,9 @@ fn get_filter_plan(plan: PlanNode) -> Result<FilterPlan> {
 async fn execute_one_select(
     ctx: FuseQueryContextRef,
     plan: PlanNode,
-    exists_res_map: HashMap<String, bool>,
+    subquery_res: SubqueryResult,
 ) -> Result<SendableDataBlockStream> {
-    let scheduled_actions = PlanScheduler::reschedule(ctx.clone(), exists_res_map.clone(), &plan)?;
+    let scheduled_actions = PlanScheduler::reschedule(ctx.clone(), Some(subquery_res), &plan)?;
 
     let remote_actions_ref = &scheduled_actions.remote_actions;
     let prepare_error_handler = move |error: ErrorCode, end: usize| {
@@ -84,7 +85,7 @@ async fn execute_one_select(
 
     PipelineBuilder::create(
         ctx.clone(),
-        exists_res_map,
+        Some(subquery_res),
         scheduled_actions.local_plan.clone(),
     )
     .build()?
@@ -123,7 +124,7 @@ impl IInterpreter for SelectInterpreter {
                     if let Ok(p) = get_filter_plan(begin) {
                         let exists_vec = find_exists_exprs(&[p.predicate.clone()]);
                         for exst in exists_vec {
-                            let expr_name = format!("{:?}", exst);
+                            let expr_name = exst.column_name();
                             if let Expression::Exists(p) = exst {
                                 queue2.push_back((*p).clone());
                                 one_level.push((*p).clone());
@@ -140,20 +141,20 @@ impl IInterpreter for SelectInterpreter {
             queue2 = VecDeque::<PlanNode>::new();
         }
 
-        let mut exists_res_map = HashMap::<String, bool>::new();
+        let mut subquery_res = SubqueryResult::new();
         let size = levels.len();
         for i in (0..size).rev() {
             let ex_plans = &levels[i];
             for exp in ex_plans {
                 let stream =
-                    execute_one_select(self.ctx.clone(), exp.clone(), exists_res_map.clone())
+                    execute_one_select(self.ctx.clone(), exp.clone(), subquery_res.clone())
                         .await?;
                 let result = stream.try_collect::<Vec<_>>().await?;
-                let b = if result.len() > 0 { true } else { false };
-                let name = names.get(&format!("{:?}", exp));
-                exists_res_map.insert(name.unwrap().to_string(), b);
+                //let b = if result.len() > 0 { true } else { false };
+                let name = names.get(exp.column_name());
+                subquery_res.insert(name.unwrap().to_string(), result[0]);
             }
         }
-        execute_one_select(self.ctx.clone(), plan, exists_res_map).await
+        execute_one_select(self.ctx.clone(), plan, subquery_res).await
     }
 }

@@ -14,7 +14,7 @@ use crate::DataValue;
 use crate::PrimitiveArrayRef;
 use crate::StringArray;
 
-#[derive(Clone, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub enum DataColumnarValue {
     // Array of values.
     Array(DataArrayRef),

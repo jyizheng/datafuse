@@ -17,7 +17,7 @@ use common_exception::Result;
 
 use crate::pretty_format_blocks;
 
-#[derive(Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct DataBlock {
     schema: DataSchemaRef,
     columns: Vec<DataColumnarValue>,

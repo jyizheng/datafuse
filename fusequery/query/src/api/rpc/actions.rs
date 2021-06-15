@@ -2,10 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0.
 
-use std::collections::HashMap;
-
 use common_planners::Expression;
 use common_planners::PlanNode;
+use common_planners::SubqueryResult;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct ExecutePlanWithShuffleAction {
@@ -14,5 +13,5 @@ pub struct ExecutePlanWithShuffleAction {
     pub plan: PlanNode,
     pub scatters: Vec<String>,
     pub scatters_action: Expression,
-    pub exists_res_map: HashMap<String, bool>,
+    pub subquery_res: SubqueryResult,
 }

@@ -126,6 +126,7 @@ pub use plan_rewriter::PlanRewriter;
 pub use plan_rewriter::RewriteHelper;
 pub use plan_scan::ScanPlan;
 pub use plan_select::SelectPlan;
+pub use plan_select::SubqueryResult;
 pub use plan_setting::SettingPlan;
 pub use plan_setting::VarValue;
 pub use plan_sort::SortPlan;
