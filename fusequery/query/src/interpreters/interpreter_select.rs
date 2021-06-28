@@ -51,11 +51,11 @@ fn get_filter_plan(plan: PlanNode) -> Result<FilterPlan> {
     return res;
 }
 
-async fn execute_one_select(
+async fn build_subquery_pipeline(
     ctx: FuseQueryContextRef,
     plan: PlanNode,
     subquery_res_map: HashMap<String, bool>,
-) -> Result<SendableDataBlockStream> {
+) -> Result<Pipeline> {
     let scheduled_actions =
         PlanScheduler::reschedule(ctx.clone(), subquery_res_map.clone(), &plan)?;
 
@@ -85,12 +85,9 @@ async fn execute_one_select(
 
     PipelineBuilder::create(
         ctx.clone(),
-        subquery_res_map,
         scheduled_actions.local_plan.clone(),
     )
-    .build()?
-    .execute()
-    .await
+    .build()
 }
 
 #[async_trait::async_trait]

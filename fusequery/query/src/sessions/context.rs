@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 
 use std::collections::VecDeque;
+use std::collections::HashMap;
 use std::future::Future;
 use std::sync::Arc;
 
@@ -40,6 +41,7 @@ pub struct FuseQueryContext {
     progress: Arc<Progress>,
     runtime: Arc<RwLock<Runtime>>,
     version: String,
+    subquery_res_map: HashMap<String, bool>,
 }
 
 pub type FuseQueryContextRef = Arc<FuseQueryContext>;
