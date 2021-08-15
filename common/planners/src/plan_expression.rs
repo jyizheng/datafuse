@@ -30,7 +30,7 @@ use common_functions::aggregates::AggregateFunctionRef;
 use common_functions::scalars::FunctionFactory;
 use lazy_static::lazy_static;
 
-use crate::InListExpr;
+//use crate::InListExpr;
 use crate::PlanNode;
 
 lazy_static! {
@@ -62,7 +62,7 @@ pub enum Expression {
     /// Column name.
     Column(String),
     /// select number from t where number in (1, 3, 5)
-    InList(InListExpr),
+    //InList(InListExpr),
     /// Note: When literal represents a column, its column_name will not be None
     Literal {
         value: DataValue,
@@ -130,13 +130,13 @@ impl Expression {
     pub fn column_name(&self) -> String {
         match self {
             Expression::Alias(name, _expr) => name.clone(),
-            Expression::InList(_) => {
-                let mut hasher = DefaultHasher::new();
-                let name = format!("{:?}", self);
-                name.hash(&mut hasher);
-                let hsh = hasher.finish();
-                format!("InList_{}", hsh)
-            }
+            //Expression::InList(_) => {
+            //    let mut hasher = DefaultHasher::new();
+            //    let name = format!("{:?}", self);
+            //    name.hash(&mut hasher);
+            //    let hsh = hasher.finish();
+            //    format!("InList_{}", hsh)
+            //}
             Expression::Column(name) => name.clone(),
             Expression::Literal {
                 column_name: Some(name),
@@ -225,7 +225,7 @@ impl Expression {
         match self {
             Expression::Alias(_, expr) => expr.to_data_type(input_schema),
             Expression::Column(s) => Ok(input_schema.field_with_name(s)?.data_type().clone()),
-            Expression::InList(inlist_expr) => inlist_expr.expr().to_data_type(input_schema),
+            //Expression::InList(inlist_expr) => inlist_expr.expr().to_data_type(input_schema),
             Expression::Literal { value, .. } => Ok(value.data_type()),
             Expression::Subquery { query_plan, .. } => Ok(Self::to_subquery_type(query_plan)),
             Expression::ScalarSubquery { query_plan, .. } => {
@@ -318,17 +318,17 @@ impl fmt::Debug for Expression {
             Expression::UnaryExpression { op, expr } => {
                 write!(f, "({} {:?})", op, expr)
             }
-            Expression::InList(inlist_expr) => {
-                if inlist_expr.negated() {
-                    write!(f, "Not ")?;
-                }
-                write!(
-                    f,
-                    "({:?} In ({:?}))",
-                    inlist_expr.expr(),
-                    inlist_expr.list()
-                )
-            }
+            //Expression::InList(inlist_expr) => {
+            //    if inlist_expr.negated() {
+            //        write!(f, "Not ")?;
+            //    }
+            //    write!(
+            //        f,
+            //        "({:?} In ({:?}))",
+            //        inlist_expr.expr(),
+            //        inlist_expr.list()
+            //    )
+            //}
             Expression::ScalarFunction { op, args } => {
                 write!(f, "{}(", op)?;
 

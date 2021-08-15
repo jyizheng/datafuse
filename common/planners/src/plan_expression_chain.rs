@@ -22,7 +22,7 @@ use common_functions::scalars::FunctionFactory;
 use crate::ActionAlias;
 use crate::ActionConstant;
 use crate::ActionFunction;
-use crate::ActionInList;
+//use crate::ActionInList;
 use crate::ActionInput;
 use crate::Expression;
 use crate::ExpressionAction;
@@ -78,6 +78,7 @@ impl ExpressionChain {
 
                 self.actions.push(ExpressionAction::Constant(value));
             }
+            /*
             Expression::InList(inlist_expr) => {
                 self.add_expr(inlist_expr.expr())?;
                 let mut val_list = Vec::new();
@@ -117,6 +118,7 @@ impl ExpressionChain {
                 };
                 self.actions.push(ExpressionAction::InList(v));
             }
+            */ 
             //Expression::Exists(_p) => {
             //    let value = ActionExists {
             //        name: format!("{:?}", expr),

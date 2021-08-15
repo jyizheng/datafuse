@@ -305,7 +305,6 @@ where F: Fn(&Expression) -> Result<Option<Expression>> {
             }),
 
             Expression::Column(_)
-            | Expression::InList { .. } => Ok(expr.clone()),
             | Expression::Literal { .. }
             | Expression::Subquery { .. }
             | Expression::ScalarSubquery { .. } => Ok(expr.clone()),

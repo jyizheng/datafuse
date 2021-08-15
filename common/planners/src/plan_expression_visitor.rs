@@ -108,7 +108,6 @@ impl Expression {
             Expression::Sort { expr, .. } => expr.accept(visitor),
             Expression::Column(_)
             | Expression::Literal{ .. }
-            | Expression::InList { .. }
             | Expression::Subquery { .. }
             | Expression::ScalarSubquery { .. }
             | Expression::Wildcard => Ok(visitor),
